@@ -202,6 +202,7 @@ Nothing in this repository substitutes a different browser engine.
 | [docs/licensing.md](docs/licensing.md) | Chromium, Brave, brave-core and bundled dependency licensing and obligations |
 | [docs/branding.md](docs/branding.md) | Product naming, temporary upstream branding, trademark considerations |
 | [docs/development-workflow.md](docs/development-workflow.md) | Full setup, fetch, build, run, package, test and update workflow |
+| [docs/codespaces-build.md](docs/codespaces-build.md) | GitHub Codespaces feasibility audit — measured machine availability, Linux build support, storage and cost: **not viable for the browser build** (32 GB max disk vs ~60 GB checkout) |
 
 ---
 
