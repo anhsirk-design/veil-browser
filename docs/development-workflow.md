@@ -87,6 +87,85 @@ supplies its own fetch step.
 **Shell note.** Run the browser from a normal `cmd.exe` window or from Explorer.
 Debug builds log to stderr, and that **crashes under Cygwin or Git Bash**.
 
+### 1.1 Verified environment record (Phase 1, 2026-09-17)
+
+The reference workstation was measured. Recording it because "the machine is
+probably fine" is how build attempts get wasted.
+
+| Item | Measured | Verdict |
+| --- | --- | --- |
+| OS | Windows build `10.0.26200` (Windows 11), AMD64 | OK |
+| CPU | AMD Ryzen 7 6800H, **16 logical processors** | Adequate |
+| RAM | **15.25 GB total**, 33.25 GB pagefile, ~2.5 GB free when idle-with-apps | **Marginal** — link steps need headroom; close other applications |
+| Disk | **C: only ready drive — 175.6 GB free of 930.5 GB** | **Tight** — see the budget below |
+| Node.js | system `v24.14.0` (**below** the `>=\u200924.16.0` hard minimum) | **Blocked** by system install |
+| npm | `11.9.0` (prefix `%APPDATA%\npm`, user-level) | OK |
+| pnpm | installed Phase 1 → **`12.4.2`** | OK |
+| Python | `3.10.11` | OK |
+| Git | `2.53.0.windows.2` | OK |
+| GitHub CLI | `2.101.0`, authenticated | OK |
+| **Visual Studio** | Community 2022 **17.14.37111.16** installed | Version OK, **workload missing** |
+| **MSVC C++ toolchain** | **NOT INSTALLED** — no `cl.exe`, `vswhere -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64` returns empty | **BLOCKING** |
+| **Windows SDK 10** | **NOT INSTALLED** — `Windows Kits\10` does not exist (only `Windows Kits\8.1\References`) | **BLOCKING** |
+| Installed VS workloads | only `Workload.CoreEditor` and `Workload.ManagedGame` (12 selected packages) | No C++ |
+| Developer Mode | **OFF** (`AllowDevelopmentWithoutDevLicense = 0`) | **Blocking** (needs admin) |
+| depot_tools | Not installed — correct; brave-core's `init` bootstraps it | Expected |
+| Elevation | **Not elevated** | Cannot install machine-wide prerequisites |
+
+**The build is blocked on an elevated install step.** Installing the C++
+workload and the Windows SDK modifies a machine-wide Visual Studio install and
+requires Administrator rights, which cannot be obtained non-interactively.
+
+Unblock (run from an **elevated** prompt):
+
+```powershell
+& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify `
+  --installPath "C:\Program Files\Microsoft Visual Studio\2022\Community" `
+  --add Microsoft.VisualStudio.Workload.NativeDesktop `
+  --includeRecommended --passive --norestart
+```
+
+Then confirm:
+
+```powershell
+& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" `
+  -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+  -property installationPath
+```
+
+Developer Mode also requires Administrator:
+
+```powershell
+# elevated
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" `
+  /t REG_DWORD /f /v AllowDevelopmentWithoutDevLicense /d 1
+```
+
+**Node.js.** The system Node (`v24.14.0`) is below brave-core's hard minimum.
+Phase 1 installed a **portable Node 24.21.0** at `C:\veil-build\tools\node`,
+which requires no Administrator rights and does not disturb the system install.
+Put it first on `PATH` for build shells:
+
+```powershell
+$env:PATH = "C:\veil-build\tools\node;" + $env:PATH
+node --version   # v24.21.0
+```
+
+**Disk budget for a full build** (estimates, deliberately conservative):
+
+| Item | Approx. |
+| --- | --- |
+| Chromium + brave-core checkout via `gclient sync` | ~60 GB |
+| depot_tools, vpython, toolchain downloads | ~10 GB |
+| Build output (`out\Component_*`) | ~30–60 GB |
+| siso/ninja cache and intermediates | ~10 GB |
+| **Total** | **~110–140 GB** |
+
+Against 175.6 GB free on the only ready drive, that leaves roughly **35–65 GB**
+of headroom on the system drive. That is workable but **tight**, and is close to
+the project's "do not proceed if disk space becomes unsafe" rule. Free space
+first, or add a drive.
+
 ### Linux / macOS
 
 Follow the corresponding upstream wiki pages:
@@ -207,10 +286,17 @@ far cheaper than a full `sync`.
 
 Worth understanding, because it explains most failures:
 
-- `pnpm run init` sets env vars including `DEPOT_TOOLS_WIN_TOOLCHAIN=1`,
-  `USE_BRAVE_HERMETIC_TOOLCHAIN=1`, and a Brave-hosted toolchain base URL; it
-  creates `.gclient` with two solutions — `src` (Chromium) and `src/brave`
-  (brave-core) — and runs `gclient sync`.
+- `pnpm run init` sets build environment variables and creates `.gclient` with
+  two solutions — `src` (Chromium) and `src/brave` (brave-core) — then runs
+  `gclient sync`.
+- **Toolchain note (verified in Phase 1).** brave-core's `config.ts` sets
+  `DEPOT_TOOLS_WIN_TOOLCHAIN = '0'` for external developers, meaning depot_tools
+  uses your **locally installed Visual Studio**. `USE_BRAVE_HERMETIC_TOOLCHAIN`
+  defaults to true only when a Brave-internal remote-execution service is
+  configured, and the source comments it as *"Use hermetic toolchain only
+  internally"*. **There is no hermetic escape hatch for external developers —
+  Visual Studio with the C++ workload is mandatory on Windows.** See
+  [upstream-strategy.md](upstream-strategy.md) §7.1.
 - The real revision lock is the generated **`<workspace>/.gclient_entries`**,
   which lists the exact versions checked out. `versions.json` is our *intent*;
   `.gclient_entries` is the *fact*.

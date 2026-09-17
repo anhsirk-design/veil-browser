@@ -101,8 +101,26 @@ Recorded in `versions.json` because they are **hard failures**, not warnings:
 - **Node.js** `>=24.16.0 <25.0.0` — `devEngines` with `onFail: "error"`.
 - **pnpm** `>=11.11.0` — `devEngines` with `onFail: "error"`.
 - **Git** 2.41+ — and explicitly *not* the Git inside depot_tools.
-- **Visual Studio** 2022 17.8.3+ with Desktop development with C++ and the
-  Windows SDK (Windows builds).
+- **Visual Studio** 2022 17.8.3+ with the **Desktop development with C++**
+  workload and the **Windows SDK** (Windows builds).
+- **Windows Developer Mode** enabled.
+- **Administrator rights, once**, to install the C++ workload and SDK.
 
-See [`../docs/development-workflow.md`](../docs/development-workflow.md) §1 for
-the full prerequisite picture.
+### Verified in Phase 1: there is no hermetic toolchain escape hatch
+
+brave-core's `build/commands/lib/config.ts` sets
+`DEPOT_TOOLS_WIN_TOOLCHAIN = '0'` for anyone without a Brave-internal
+remote-execution service, which makes depot_tools use the **locally installed
+Visual Studio**. The `USE_BRAVE_HERMETIC_TOOLCHAIN` branch is commented
+*"Use hermetic toolchain only internally"* and points at Brave's internal
+dependencies URL.
+
+So: **Visual Studio with the C++ workload is genuinely mandatory on Windows**,
+not a wiki formality. The `GYP_MSVS_HASH` variable in current source is
+`GYP_MSVS_HASH_3bfcb536c8 = '3dce9a2ec1'` — the wiki's
+`GYP_MSVS_HASH_68a20d6dee` name is stale.
+
+See [`../docs/upstream-strategy.md`](../docs/upstream-strategy.md) §7.1 for the
+source excerpt, and
+[`../docs/development-workflow.md`](../docs/development-workflow.md) §1.1 for the
+measured environment and the exact unblock commands.

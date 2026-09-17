@@ -91,9 +91,27 @@
       "note": "The Git bundled in depot_tools must NOT be used."
     },
     "visual_studio": {
-      "windows": "Visual Studio Community 2022, Update 17.8.3 or later, with Desktop development with C++ and the Windows SDK",
+      "windows": "Visual Studio Community 2022, Update 17.8.3 or later, with the 'Desktop development with C++' workload and the Windows SDK",
       "hard": true,
-      "note": "Upstream's Windows guide mandates it. Brave's init sets USE_BRAVE_HERMETIC_TOOLCHAIN=1, which may supplement but does not demonstrably replace a local install. Treat as required until demonstrated otherwise."
+      "verified": "2026-09-17",
+      "note": "REQUIRED. Verified from brave-core build/commands/lib/config.ts: useBraveHermeticToolchain defaults to true only when a Brave-internal remote-execution service is configured; otherwise Brave sets DEPOT_TOOLS_WIN_TOOLCHAIN='0' so depot_tools uses the locally installed Visual Studio. The hermetic branch is commented in-source as 'Use hermetic toolchain only internally' and points at Brave's internal dependencies URL. There is no hermetic escape hatch for external developers. The GYP_MSVS_HASH variable in current source is GYP_MSVS_HASH_3bfcb536c8='3dce9a2ec1' (the wiki's GYP_MSVS_HASH_68a20d6dee name is stale)."
+    },
+    "windows_sdk": {
+      "windows": "Windows 10/11 SDK, installed via the 'Desktop development with C++' workload (include the recommended components)",
+      "hard": true,
+      "verified": "2026-09-17",
+      "note": "Chromium requires a Windows SDK; it is not optional."
+    },
+    "windows_developer_mode": {
+      "windows": "Developer Mode must be enabled (requires Administrator)",
+      "hard": true,
+      "verified": "2026-09-17"
+    },
+    "elevation": {
+      "windows": "Administrator rights are required once, to install the C++ workload and the Windows SDK",
+      "hard": true,
+      "verified": "2026-09-17",
+      "note": "Both modify a machine-wide Visual Studio install and cannot be done from a non-elevated shell."
     }
   },
 

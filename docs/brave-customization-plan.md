@@ -27,13 +27,19 @@ fits Veil, the intended disposition, and the risk of removal.
 
 ### Confidence levels used below
 
-Because Phase 0 defers the source checkout, code locations are marked:
+Because the source checkout does not yet exist on this machine, code locations
+are marked:
 
-- **[V]** — **verified** this phase (from brave-core's `package.json`, docs
-  index, or repository listings).
+- **[V]** — **verified** from brave-core's `package.json`, docs index,
+  repository listings, `gh search code`, or a direct raw-file fetch.
 - **[I]** — **indicative** path, derived from Brave's documented layout and
-  directory conventions. **Must be verified against the pinned checkout before
-  any deletion.**
+  directory conventions.
+
+> **Phase 1 status.** The source checkout could not be obtained (the build
+> environment is blocked on an elevated Visual Studio C++ workload install — see
+> [development-workflow.md](development-workflow.md) §1.1). **No `[I]` entry has
+> been upgraded to `[V]` in this phase.** Doing so requires the actual checkout.
+> Guessing at paths would be worse than leaving them flagged.
 
 Treat every **[I]** path as a search hint, not a fact.
 

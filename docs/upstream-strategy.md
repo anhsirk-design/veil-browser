@@ -208,20 +208,57 @@ same layering discipline applies:
 
 ---
 
-## 7. Open questions to resolve when the build workspace exists
+## 7. Resolved and open questions
 
-These are recorded now so they are not forgotten, but they are **not** Phase 0
-deliverables:
+### 7.1 RESOLVED — the hermetic toolchain does not remove the Visual Studio requirement
 
-1. Confirm whether `USE_BRAVE_HERMETIC_TOOLCHAIN=1` (which Brave's `init` sets)
-   removes the hard requirement for a local Visual Studio C++ install on
-   Windows, or merely supplements it. Upstream's Windows guide still mandates
-   Visual Studio, so Veil treats it as required until demonstrated otherwise.
-2. Confirm the exact GN arg set needed to produce a minimal build and how much
-   build time/disk a `component` debug build actually consumes on this class of
-   hardware.
-3. Decide the eventual binary/product naming and channel strategy (see
+Phase 0 recorded this as open. It is now **verified from brave-core source**
+(`build/commands/lib/config.ts` on `master`):
+
+```
+this.useBraveHermeticToolchain = envConfig.getBoolean(
+  ['use_brave_hermetic_toolchain'],
+  this.rbeService.includes('.brave.com:'),
+)
+...
+if (!this.useBraveHermeticToolchain) {
+  env.DEPOT_TOOLS_WIN_TOOLCHAIN = '0'
+} else {
+  // Use hermetic toolchain only internally.
+  env.USE_BRAVE_HERMETIC_TOOLCHAIN = '1'
+  env.DEPOT_TOOLS_WIN_TOOLCHAIN = '1'
+  env.GYP_MSVS_HASH_3bfcb536c8 = '3dce9a2ec1'
+  env.DEPOT_TOOLS_WIN_TOOLCHAIN_BASE_URL = `${this.internalDepsUrl}/windows-hermetic-toolchain/`
+}
+```
+
+Conclusions:
+
+1. `useBraveHermeticToolchain` **defaults to true only when a Brave-internal
+   remote-execution service is configured** (`rbeService` containing
+   `.brave.com:`). An external developer has no such service, so the default is
+   **false**.
+2. When false, Brave sets **`DEPOT_TOOLS_WIN_TOOLCHAIN = '0'`**, which means
+   depot_tools uses the **locally installed Visual Studio** toolchain.
+3. The hermetic path is commented in-source as **"Use hermetic toolchain only
+   internally"** and points at Brave's internal dependencies URL.
+
+**Therefore: a local Visual Studio install with the C++ workload is mandatory
+for a Windows Veil build. Brave's hermetic Windows toolchain is not available to
+external developers.**
+
+Also verified: the `GYP_MSVS_HASH` variable name in current source is
+`GYP_MSVS_HASH_3bfcb536c8` (value `3dce9a2ec1`), not the `GYP_MSVS_HASH_68a20d6dee`
+name that appears on the upstream wiki. Trust the source over the wiki.
+
+### 7.2 Still open
+
+1. Confirm the exact GN arg set needed to produce a minimal build and how much
+   build time/disk a `component` build actually consumes on this class of
+   hardware. *(Phase 1 assessment produced estimates; measurement requires a
+   build.)*
+2. Decide the eventual binary/product naming and channel strategy (see
    [branding.md](branding.md)).
-4. Decide whether Veil maintains its own `chromium`/`brave-core` mirrors or
+3. Decide whether Veil maintains its own `chromium`/`brave-core` mirrors or
    consumes upstream directly. Default: consume upstream directly until there is
    a concrete reason not to.

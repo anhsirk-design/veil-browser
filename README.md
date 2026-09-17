@@ -160,22 +160,34 @@ build. `C:\Work\Project Open Browser` is fine for authoring documentation but is
 Phase 0 ships the foundation, documentation and tooling. It does **not** ship a
 compiled browser.
 
-The local build is deferred because the current workstation does not yet satisfy
-upstream's requirements:
+The local build is deferred because the reference workstation does not yet
+satisfy upstream's requirements. Status as of Phase 1 (2026-09-17):
 
 | Requirement | Required | Present |
 | --- | --- | --- |
-| Node.js | `>=24.16.0 <25.0.0` (hard `devEngines` constraint) | `v24.14.0` ❌ |
-| pnpm | `>=11.11.0` | not installed ❌ |
-| `depot_tools` / `gclient` | required | not installed ❌ |
-| Visual Studio C++ toolchain + Windows SDK | required | not verified ❌ |
-| RAM | comfortable headroom above 16 GB | 15.2 GB ⚠️ |
-| Free disk | ~176 GB free is enough for checkout; build output adds significantly | 176.2 GB ⚠️ |
+| Node.js | `>=24.16.0 <25.0.0` (hard `devEngines` constraint) | `v24.14.0` system ❌ · **`v24.21.0` portable ✓** |
+| pnpm | `>=11.11.0` | **`12.4.2` installed ✓** |
+| `depot_tools` / `gclient` | bootstrapped by `pnpm run init` | not installed (expected) |
+| Visual Studio | 2022 17.8.3+ with the C++ workload | 2022 17.14 **installed, C++ workload missing** ❌ |
+| MSVC C++ toolchain | required | **not installed** ❌ |
+| Windows SDK 10 | required | **not installed** ❌ |
+| Windows Developer Mode | required | **off** ❌ |
+| Administrator rights to install the above | required | **not available** ❌ |
+| RAM | headroom above 16 GB | 15.25 GB ⚠️ |
+| Free disk | ~110–140 GB for checkout **and** build output | 175.6 GB ⚠️ tight |
+
+**The blocker is an elevated install step.** Installing the C++ workload and
+Windows SDK modifies a machine-wide Visual Studio install and needs
+Administrator rights. There is no non-admin substitute: the hermetic Windows
+toolchain in Brave's build configuration is internal-only (verified in
+brave-core's `config.ts` — see
+[docs/upstream-strategy.md](docs/upstream-strategy.md) §7.1).
+
+Unblock instructions and the full measured environment are in
+[docs/development-workflow.md](docs/development-workflow.md) §1.1.
 
 These are environment limitations, **not** blockers in Veil's architecture.
-Nothing in this repository substitutes a different browser engine. See
-[docs/development-workflow.md](docs/development-workflow.md) for the exact
-prerequisite list and the full build sequence.
+Nothing in this repository substitutes a different browser engine.
 
 ---
 
