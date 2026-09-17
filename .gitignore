@@ -1,0 +1,82 @@
+# ---------------------------------------------------------------------------
+# Veil (.gitignore)
+#
+# Veil is a thin meta-repository layered on top of an upstream
+# Chromium + brave-core checkout. The upstream source tree is NEVER committed
+# here; it is fetched into a separate build workspace by scripts/.
+# ---------------------------------------------------------------------------
+
+# --- Upstream source workspace (fetched, never committed) -----------------
+# The build workspace mirrors brave-core's expected layout:
+#   <workspace>/src           -> Chromium
+#   <workspace>/src/brave     -> brave-core
+#   <workspace>/vendor/depot_tools
+#   <workspace>/out           -> build output
+src/
+out/
+out_*/
+vendor/
+build/
+third_party/
+
+# --- Build system state ---------------------------------------------------
+.gclient
+.gclient_entries
+.gclient_previous_cwd
+.gn
+.ninja_deps
+.ninja_log
+args.gn
+*.ninja
+compile_commands.json
+siso_*.json
+
+# --- Brave / Node tooling state ------------------------------------------
+node_modules/
+.pnpm-store/
+pnpm-lock.yaml.bak
+npm-debug.log*
+yarn-error.log*
+
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# --- Local secrets and machine-specific overrides -------------------------
+# .env carries Brave service keys for official builds. It must NEVER be
+# committed. Only .env.example (no real values) belongs in the repository.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.pfx
+*.p12
+secrets/
+credentials.json
+service-account*.json
+
+# --- Editors / IDE --------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- OS -------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs / temp / scratch ------------------------------------------------
+*.log
+*.tmp
+.cache/
+tmp/
+scratch/
+
+# --- Local sealed/binary verification material ----------------------------
+# Chromium's sealed key files for secure builds.
+*.sealed

@@ -1,0 +1,147 @@
+{
+  "project": "veil-browser",
+  "description": "Pinned upstream revisions for a Veil build. This file is the project's INTENT. The build's actual revision lock is the generated `.gclient_entries` in the workspace, which must be snapshotted into upstream/lock/ for any reproducible build.",
+  "generated": "2026-09-17",
+  "verified": "2026-09-17",
+
+  "upstreams": {
+    "brave-core": {
+      "role": "Primary upstream. Brave's layer over Chromium: source, GN build integration and patch tooling.",
+      "authoritative": true,
+      "repo": "https://github.com/brave/brave-core.git",
+      "ref": "master",
+      "version": "1.98.7",
+      "license": "MPL-2.0",
+      "workspace_dir": "src/brave",
+      "clone_url": "https://github.com/brave/brave-core.git",
+      "note": "brave-core MUST live at <workspace>/src/brave. Upstream instructions are explicit about this path."
+    },
+
+    "chromium": {
+      "role": "Browser engine and platform.",
+      "authoritative": true,
+      "repo": "https://chromium.googlesource.com/chromium/src.git",
+      "mirror_repo": "https://github.com/brave/chromium",
+      "ref_type": "tag",
+      "tag": "154.0.8037.49",
+      "license": "BSD-3-Clause (project default; many bundled components carry their own licenses)",
+      "workspace_dir": "src",
+      "declared_by": "brave-core package.json -> config.projects.chrome",
+      "note": "brave-core's generated .gclient points the `src` solution at the brave/chromium mirror rather than chromium.googlesource.com directly.",
+      "custom_deps_excluded": [
+        "src/testing/libfuzzer/fuzzers/wasm_corpus",
+        "src/third_party/chromium-variations"
+      ],
+      "custom_vars": {
+        "checkout_clang_coverage_tools": true,
+        "checkout_clangd": true,
+        "checkout_pgo_profiles": false
+      }
+    },
+
+    "depot_tools": {
+      "role": "Chromium build tooling bootstrap: gclient, gn, ninja/autoninja wrappers.",
+      "authoritative": true,
+      "repo": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
+      "ref": "main",
+      "license": "BSD-3-Clause",
+      "workspace_dir": "vendor/depot_tools",
+      "declared_by": "brave-core package.json -> config.projects.depot_tools",
+      "note": "Fetched automatically by `pnpm run init`. Do NOT use the Git bundled inside depot_tools - it is incompatible with Brave's plaster patch tooling."
+    },
+
+    "brave-browser": {
+      "role": "THIN repository. Issues, releases and wiki only. NOT buildable, NOT used in a build.",
+      "authoritative": false,
+      "repo": "https://github.com/brave/brave-browser",
+      "latest_release_tag": "v1.95.102",
+      "latest_release_published": "2026-09-16T05:13:06Z",
+      "target_commitish": "master",
+      "used_for": "release/version signal and documentation source only",
+      "upstream_readme_statement": "This repository is not needed for building the browser and only holds issues, releases and the wiki. The source code and contributions are at https://github.com/brave/brave-core."
+    },
+
+    "adblock-rust": {
+      "role": "Brave's adblock engine, linked into brave-core via brave/adblock-rust-ffi.",
+      "authoritative": true,
+      "repo": "https://github.com/brave/adblock-rust",
+      "linked_at": "components/adblock_rust_ffi",
+      "ref": "resolved by brave-core at sync time",
+      "note": "Pinned indirectly. Record the resolved revision in upstream/lock/ for a reproducible build."
+    }
+  },
+
+  "build_requirements": {
+    "node": {
+      "range": ">=24.16.0 <25.0.0",
+      "declared_by": "brave-core package.json -> devEngines.runtime.node",
+      "on_fail": "error",
+      "hard": true
+    },
+    "pnpm": {
+      "range": ">=11.11.0",
+      "declared_by": "brave-core package.json -> devEngines.packageManager",
+      "on_fail": "error",
+      "hard": true
+    },
+    "git": {
+      "minimum": "2.41",
+      "source": "https://git-scm.com",
+      "hard": true,
+      "note": "The Git bundled in depot_tools must NOT be used."
+    },
+    "visual_studio": {
+      "windows": "Visual Studio Community 2022, Update 17.8.3 or later, with Desktop development with C++ and the Windows SDK",
+      "hard": true,
+      "note": "Upstream's Windows guide mandates it. Brave's init sets USE_BRAVE_HERMETIC_TOOLCHAIN=1, which may supplement but does not demonstrably replace a local install. Treat as required until demonstrated otherwise."
+    }
+  },
+
+  "build_system": {
+    "fetch": "gclient sync (bootstrapped by `pnpm run init`), ~240 repositories, ~60 GB decompressed",
+    "patch_tool": "plaster",
+    "configure": "gn gen",
+    "compile": "autoninja (Brave customises siso as the underlying distributed build system)",
+    "default_target": "brave:all",
+    "default_build_type": "component",
+    "build_types": ["Release", "Component", "Static", "Debug"]
+  },
+
+  "authoritative_commands": {
+    "init": "pnpm install --frozen-lockfile && node ./build/commands/scripts/sync.ts --init",
+    "sync": "pnpm install --frozen-lockfile && node ./build/commands/scripts/sync.ts",
+    "build": "node ./build/commands/scripts/build.ts",
+    "create_dist": "node ./build/commands/scripts/build.ts --target=create_dist",
+    "start": "node ./build/commands/scripts/commands.js start",
+    "apply_patches": "pnpm run apply_patches",
+    "network_audit": "pnpm run network-audit",
+    "generate_about_credits": "pnpm run generate_about_credits",
+    "note": "All of the above are executed with the working directory set to <workspace>/src/brave."
+  },
+
+  "privacy_constraints": {
+    "principle": "A Veil build supplies none of Brave's build-time service credentials. See .env.example.",
+    "brave_build_time_credentials_intentionally_not_supplied": [
+      "brave_stats_api_key",
+      "brave_stats_updater_url",
+      "brave_sync_endpoint",
+      "brave_variations_server_url",
+      "brave_services_key",
+      "brave_services_key_id",
+      "service_key_aichat",
+      "service_key_stt",
+      "email_aliases_api_key",
+      "brave_google_api_key",
+      "brave_google_api_endpoint",
+      "safebrowsing_api_endpoint",
+      "google_default_client_id",
+      "google_default_client_secret"
+    ]
+  },
+
+  "reproducibility": {
+    "current_state": "INTENT ONLY - no build has been performed, so no .gclient_entries snapshot exists yet.",
+    "required_action": "After the first successful sync, copy <workspace>/.gclient_entries to upstream/lock/<date>-<brave-core-version>-gclient-entries.txt and reference it here.",
+    "lock_dir": "upstream/lock/"
+  }
+}

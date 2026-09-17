@@ -1,0 +1,24 @@
+# Normalise line endings on commit so the repository is consistent across
+# platforms.
+* text=auto
+
+# Shell scripts MUST stay LF. CRLF breaks bash on any platform.
+*.sh   text eol=lf
+*.bash text eol=lf
+
+# Windows scripts.
+*.ps1  text eol=crlf
+
+# Prose and data.
+*.md   text eol=lf
+*.json text eol=lf
+*.txt  text eol=lf
+
+# Binary assets should never be mangled.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.icns binary
+*.pdf  binary
